@@ -1,232 +1,67 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GTA V Mapa Interativo – Encontre Locais por Coordenadas</title>
-<meta name="description" content="GTA V Mapa Interativo - Encontre locais no mapa do GTA V usando coordenadas!">
-
-<link rel="preconnect" href="https://unpkg.com" crossorigin>
-<link rel="dns-prefetch" href="https://unpkg.com">
-<link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" as="script" crossorigin>
-<link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" as="style" crossorigin>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-
+<html>
+   <head>
+      <title>GTA 5 Interactive Map - Get Location On GTA V Map Using Coordinates!</title>
+      <meta charset="utf-8">
+      <meta name="description" content="GTA 5 Interactive Map - Get Location On GTA V Map Using Coordinates!">
+      <meta name="keyword" content="GTA 5 Map, GTA Map, GTA V Interactive Map, Grand Theft Auto 5 Map">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="">
+      <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.slim.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;overflow:hidden}
-  body{font:13px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#fff}
+      #map { height: 100%;width: 100%; position: absolute }
+.forma{
+	position: absolute;
+	top: 100px;
+	left: 10px;
+	z-index: 99999;
+	background: rgba(0,0,0,0.5);
+	padding: 5px;
+	text-align: center;
+}
+a{
+    text-decoration: none !Important;
+}
+.forma label{
+color: #fff;
+text-shadow: 0 0 5px #000;
+}
+.forma input{
+display: block;
+}
+.btn{
+display: block;
+margin: 10px auto 0 auto;
+padding: 5px 10px;
+text-transform: uppercase;
+}
+   </style>
+   </head>
+   
+   
+   <body style="margin: 0">
 
-  /* ── Fullscreen map ── */
-  #map{height:100%;width:100%;position:absolute;top:0;left:0;background:#111}
-
-  /* ── Coordinate form (top-left overlay) ── */
-  .coord-panel{
-    position:absolute;top:10px;left:10px;z-index:1000;
-    background:rgba(0,0,0,.65);padding:14px 16px;border-radius:6px;
-    text-align:center;backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
-    min-width:150px;
-  }
-  .coord-panel label{display:block;margin-top:8px;font-size:12px;color:#ccc;text-shadow:0 0 4px #000}
-  .coord-panel input[type="text"]{
-    width:130px;padding:5px 8px;margin-top:2px;
-    border:1px solid #555;border-radius:3px;
-    background:#1a1a1a;color:#fff;font-size:13px;
-    outline:none;transition:border-color .15s;
-  }
-  .coord-panel input[type="text"]:focus{border-color:#5b9bd5}
-  .coord-panel button{
-    display:block;margin:12px auto 0;padding:6px 24px;
-    text-transform:uppercase;font-size:12px;font-weight:600;letter-spacing:.5px;
-    border:1px solid #555;background:#444;color:#fff;border-radius:3px;
-    cursor:pointer;transition:background .15s;
-  }
-  .coord-panel button:hover{background:#666}
-
-  /* ── Info bar (bottom-left) ── */
-  .info-bar{
-    position:absolute;bottom:10px;left:10px;z-index:1000;
-    display:flex;gap:8px;align-items:center;
-  }
-  .info-bar span{
-    background:rgba(0,0,0,.65);padding:5px 12px;border-radius:3px;
-    font-size:12px;font-variant-numeric:tabular-nums;
-    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-  }
-  .info-bar button{
-    padding:5px 14px;border:1px solid #555;
-    background:rgba(0,0,0,.65);color:#fff;border-radius:3px;
-    cursor:pointer;font-size:12px;
-    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-    transition:background .15s;
-  }
-  .info-bar button:hover{background:rgba(80,80,80,.8)}
-
-
-  /* ── Leaflet dark layer-switcher ── */
-  .leaflet-control-layers{background:rgba(25,25,25,.88)!important;color:#eee;border:1px solid #444!important;border-radius:5px!important}
-  .leaflet-control-layers label{color:#ddd}
-  .leaflet-control-layers-separator{border-top-color:#444!important}
-</style>
-</head>
-<body>
-
-<!-- Formulário de coordenadas -->
-<form class="coord-panel" id="coord-form">
-  <strong style="font-size:14px">📍 Buscar Local</strong>
-  <label for="xinput">Posição X:</label>
-  <input type="text" id="xinput" placeholder="ex: -818.96" autocomplete="off">
-  <label for="yinput">Posição Y:</label>
-  <input type="text" id="yinput" placeholder="ex: 177.56" autocomplete="off">
-  <button type="submit">Buscar</button>
+<form action="" method="post" class="forma" id="formular">	
+<label for="xinput">X Position:</label>
+<input type="text" id="xinput" name="xpoz">
+<label for="yinput">Y Position:</label>
+<input type="text" id="yinput" name="ypoz">
+<input type="submit" name="submit" value="Find" class="btn btn-light"><br>
 </form>
 
-<!-- Map -->
-<div id="map"></div>
-
-<!-- Barra de info + controles de marcadores -->
-<div class="info-bar">
-  <span id="panel">Clique no mapa ou insira coordenadas</span>
-  <button id="btn-hide">Ocultar Marcadores</button>
-  <button id="btn-show">Mostrar Marcadores</button>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""
-        onload="initMap()" defer></script>
-<script>
-"use strict";
-
-/* ── GTA V Custom CRS ──────────────────────────────────
-   Exact same transformation as gtamap.xyz —
-   maps real GTA V in-game coords (X, Y) to tile pixels.
-   X (game) → lng (Leaflet),  Y (game) → lat (Leaflet)
-   ─────────────────────────────────────────────────────── */
-var CX = 117.3, CY = 172.8, SX = 0.02072, SY = 0.0205;
-
-/* ── POI markers [gameX, gameY, label, icon] ───────── */
-var MARKERS = [
-  [   8.70,   540.32, "Porta do Franklin",   "yellow-dot"],
-  [-818.96,   177.56, "Porta do Michael",    "yellow-dot"],
-  [1937.32,  3889.64, "Barraco do Trevor",   "yellow-dot"]
-];
-
-/* ── Tile config ───────────────────────────────────── */
-var TILE_CFG = { minZoom: 0, maxZoom: 7, tileSize: 256, noWrap: true, continuousWorld: false };
-
-/* ── Icon cache ────────────────────────────────────── */
-var _ico = {};
-function ico(n) {
-  return _ico[n] || (_ico[n] = L.icon({
-    iconUrl: n + ".png", iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -14]
-  }));
-}
-
-/* ── Tile layer factory ────────────────────────────── */
-function makeTiles(folder, maxZ) {
-  var o = Object.create(TILE_CFG);
-  if (maxZ) o.maxZoom = maxZ;
-  o.errorTileUrl = folder + "/empty.jpg";
-  return L.tileLayer(folder + "/{z}_{x}_{y}.jpg", o);
-}
-
-/* ── Globals ───────────────────────────────────────── */
-var map, markersLayer, clickMarker;
-var panel = document.getElementById("panel");
-var raf = 0;
-
-/* ── Init ──────────────────────────────────────────── */
-function initMap() {
-  /* Custom CRS — proper GTA V game-coordinate mapping */
-  var GTA_CRS = L.extend({}, L.CRS.Simple, {
-    projection: L.Projection.LonLat,
-    scale:  function(z) { return Math.pow(2, z); },
-    zoom:   function(s) { return Math.log(s) / Math.LN2; },
-    distance: function(a, b) {
-      var dx = b.lng - a.lng, dy = b.lat - a.lat;
-      return Math.sqrt(dx * dx + dy * dy);
-    },
-    transformation: new L.Transformation(SX, CX, -SY, CY),
-    infinite: true
-  });
-
-  var sat  = makeTiles("Satellite", 7);
-  var road = makeTiles("Roadmap",   7);
-  var atl  = makeTiles("Atlas",     7);
-
-  map = L.map("map", {
-    crs: GTA_CRS,
-    center:    [0, 0],
-    zoom:      3,
-    minZoom:   1,
-    maxZoom:   7,
-    layers:    [sat],
-    preferCanvas:        true,   // canvas renderer — faster than SVG
-    attributionControl:  false,
-    fadeAnimation:       false,
-    markerZoomAnimation: false
-  });
-
-  L.control.layers({
-    "🛰️ Satélite":    sat,
-    "🗺️ Mapa Viário": road,
-    "📜 Atlas":        atl
-  }, null, { position: "topright" }).addTo(map);
-
-  /* ── Static markers ─────────────────────────────── */
-  markersLayer = L.layerGroup().addTo(map);
-  for (var i = 0, m; i < MARKERS.length; i++) {
-    m = MARKERS[i];
-    // GTA coords: X → lng, Y → lat
-    L.marker([m[1], m[0]], { icon: ico(m[3]) })
-      .bindPopup("<b>" + m[2] + "</b><br>X: " + m[0] + " | Y: " + m[1])
-      .addTo(markersLayer);
-  }
-
-  /* ── Click on map → show game coordinates ───────── */
-  map.on("click", function(e) {
-    if (clickMarker) map.removeLayer(clickMarker);
-    var x = e.latlng.lng, y = e.latlng.lat;
-    clickMarker = L.marker([y, x])
-      .addTo(map)
-      .bindPopup("<b>X: " + x.toFixed(3) + " | Y: " + y.toFixed(3) + "</b>")
-      .openPopup();
-  });
-
-  /* ── Mousemove → live coords in info bar (rAF) ─── */
-  map.on("mousemove", function(e) {
-    if (raf) return;
-    raf = requestAnimationFrame(function() {
-      panel.textContent = "X: " + e.latlng.lng.toFixed(3) + "  |  Y: " + e.latlng.lat.toFixed(3);
-      raf = 0;
-    });
-  });
-
-  /* ── Form: search by X,Y coordinates ───────────── */
-  document.getElementById("coord-form").addEventListener("submit", function(e) {
-    e.preventDefault();
-    var x = parseFloat(document.getElementById("xinput").value);
-    var y = parseFloat(document.getElementById("yinput").value);
-    if (isNaN(x) || isNaN(y)) return alert("Preencha as coordenadas X e Y");
-
-    if (clickMarker) map.removeLayer(clickMarker);
-    clickMarker = L.marker([y, x])
-      .addTo(map)
-      .bindPopup("<b>X: " + x + " | Y: " + y + "</b>")
-      .openPopup();
-    map.setView([y, x], 5);
-  });
-
-  /* ── Marker controls (event delegation) ─────────── */
-  document.querySelector(".info-bar").addEventListener("click", function(e) {
-    var id = e.target.id;
-    if (id === "btn-hide") map.removeLayer(markersLayer);
-    else if (id === "btn-show" && !map.hasLayer(markersLayer)) map.addLayer(markersLayer);
-  });
-}
-</script>
-</body>
+      <div id="map"></div>
+	     <script src="scripts/script.js" ></script>
+            <div id="markerSkripta"></div>
+    
+   </body>
 </html>
+
+
+<input id="lat">
+<input id="lng">
